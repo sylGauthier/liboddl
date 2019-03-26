@@ -43,7 +43,7 @@ letter          [a-zA-Z]
 "ref"|"r"            { return REF;          }
 "type"|"t"           { return TYPE;         }
 
-
+"null"               { return NULL_LIT;     }
 "true"               { intVal = 1;
                        return BOOL;         }
 "false"              { intVal = 0;
