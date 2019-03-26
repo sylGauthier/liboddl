@@ -40,6 +40,7 @@ enum ODDLTokens {
     REF,
     TYPE,
     /* Literals */
+    NULL_LIT,
     BOOL_LIT,
     DEC_LIT,
     HEX_LIT,
