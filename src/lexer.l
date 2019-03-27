@@ -59,7 +59,7 @@ letter          [a-zA-Z]
                                               return BIN_LIT;      }
 '.*'                                        { strVal = str_copy(yytext);
                                               return CHAR_LIT;      }
-\".*\"                                      { strVal = str_copy(yytext);
+\"(?:[^"\\]|\\.)*\"                         { strVal = str_copy(yytext);
                                               return STRING_LIT;      }
 
 {letter}({letter}|{digit})* {
