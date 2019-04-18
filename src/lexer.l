@@ -2,18 +2,32 @@
 #include "tokens.h"
 #include "string_utils.h"
 
-char* strVal;
-long long int intVal;
+char* strVal; /*TODO: Make string copy static, strVal should be a static array to avoid mem leaks on parse error */
+uint64_t intVal;
+unsigned int curLine = 1;
 double dblVal;
 %}
 
 digit           [0-9]
+declit          {digit}(_?{digit})*
 hexdigit        [a-fA-F0-9]
 octdigit        [0-7]
 bindigit        [0-1]
 letter          [a-zA-Z]
+ident           {letter}({letter}|{digit})*
 
+%x IN_COMMENT
 %%
+<INITIAL>{
+"/*"              BEGIN(IN_COMMENT);
+}
+<IN_COMMENT>{
+"*/"      BEGIN(INITIAL);
+[^*\n]+   /* eat comment in chunks */
+"*"       /* eat the lone star */
+\n        yylineno++;
+}
+
 "{"                  { return OBRACE;       }
 "}"                  { return CBRACE;       }
 "["                  { return OBRACKET;     }
@@ -32,16 +46,15 @@ letter          [a-zA-Z]
 "int16"|"i16"        { return INT16;        }
 "int32"|"i32"        { return INT32;        }
 "int64"|"i64"        { return INT64;        }
-"uint8"|"u8"         { return UINT8;        }
-"uint16"|"u16"       { return UINT16;       }
-"uint32"|"u32"       { return UINT32;       }
-"uint64"|"u64"       { return UINT64;       }
-"float16"|"h"|"f16"  { return FLOAT16;      }
-"float32"|"f"|"f32"  { return FLOAT32;      }
-"float64"|"d"|"f64"  { return FLOAT64;      }
+"unsigned_int8"|"u8"            { return UINT8;        }
+"unsigned_int16"|"u16"          { return UINT16;       }
+"unsigned_int32"|"u32"          { return UINT32;       }
+"unsigned_int64"|"u64"          { return UINT64;       }
+"half"|"float16"|"h"|"f16"      { return FLOAT16;      }
+"float"|"float32"|"f"|"f32"     { return FLOAT32;      }
+"double"|"float64"|"d"|"f64"    { return FLOAT64;      }
 "string"|"s"         { return STRING;       }
 "ref"|"r"            { return REF;          }
-"type"|"t"           { return TYPE;         }
 
 "null"               { return NULL_LIT;     }
 "true"               { intVal = 1;
@@ -49,7 +62,11 @@ letter          [a-zA-Z]
 "false"              { intVal = 0;
                        return BOOL;         }
 
-{digit}(_?{digit})*                         { intVal = strtol(yytext, NULL, 10);
+{declit}?\.{declit}((e|E)(\+|\-)?{declit})? { dblVal = strtod(yytext, NULL);
+                                              return FLOAT_LIT;    }
+{declit}\.                                  { dblVal = strtod(yytext, NULL);
+                                              return FLOAT_LIT;    }
+{declit}                                    { intVal = strtol(yytext, NULL, 10);
                                               return DEC_LIT;      }
 ("0x"|"0X"){hexdigit}(_?{hexdigit})*        { intVal = strtol(yytext+2, NULL, 16);
                                               return HEX_LIT;      }
@@ -59,13 +76,16 @@ letter          [a-zA-Z]
                                               return BIN_LIT;      }
 '.*'                                        { strVal = str_copy(yytext);
                                               return CHAR_LIT;      }
-\"(?:[^"\\]|\\.)*\"                         { strVal = str_copy(yytext);
+\"(?:[^"\\]|\\.)*\"                         { strVal = str_lit_copy(yytext);
                                               return STRING_LIT;      }
 
-{letter}({letter}|{digit})* {
-                       strVal = str_copy(yytext);
+(\%|\$){ident}(\%{ident})+                  { strVal = str_copy(yytext);
+                                              return REF_LIT;       }
+{ident}              { strVal = str_copy(yytext);
                        return IDENT;      }
-[ \t\n\r]            /* skip whitespace */
+[ \t\r]            /* skip whitespace */
+"\n"                   curLine++;
+\/\/.*$                curLine++;
 .                    { printf("Unknown character [%c]\n",yytext[0]);
                        return UNKNOWN;    }
 %%
