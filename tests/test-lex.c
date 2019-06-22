@@ -9,6 +9,9 @@ int main() {
 
         ret = yylex();
         switch (ret) {
+            case END:
+                printf("EOF\n");
+                return 0;
             case OBRACE:
                 printf("OBRACE\n");
                 break;
@@ -114,6 +117,12 @@ int main() {
             case STRING_LIT:
                 printf("STRING_LIT\n");
                 break;
+            case FLOAT_LIT:
+                printf("FLOAT_LIT\n");
+                break;
+            case REF_LIT:
+                printf("REF_LIT\n");
+                break;
             case ESC_CHAR:
                 printf("ESC_CHAR\n");
                 break;
@@ -125,6 +134,7 @@ int main() {
                 break;
             default:
                 printf("Etoooo...\n");
+                return 1;
         }
     }
     return 0;
