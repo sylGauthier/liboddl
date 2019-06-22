@@ -1,6 +1,6 @@
 #include <stdio.h>
+#include <liboddl/liboddl.h>
 
-#include "../src/parser.h"
 #include "test-utils.h"
 
 #define INDENT(l) {int i; for(i = 0; i < (l); i++) printf("    ");}

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "parser.h"
+#include <liboddl/liboddl.h>
 #include "tokens.h"
 #include "data_structure.h"
 #include "common.h"
