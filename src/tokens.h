@@ -2,13 +2,16 @@
 #define TOKENS_H
 
 #include <stdio.h>
+#include <stdint.h>
 
 extern FILE* yyin;
 extern char* strVal;
-extern long long int intVal;
+extern uint64_t intVal;
 extern double dblVal;
+extern unsigned int curLine;
 
 enum ODDLTokens {
+    END = 0,
     /* Symbols */
     OBRACE = 1,
     CBRACE,
@@ -24,6 +27,7 @@ enum ODDLTokens {
     EQUAL,
     DOT,
     /* Types */
+    TYPE_OFFSET,    /* Should always be on top of type list */
     BOOL,
     INT8,
     INT16,
@@ -48,12 +52,15 @@ enum ODDLTokens {
     BIN_LIT,
     CHAR_LIT,
     STRING_LIT,
+    FLOAT_LIT,
+    REF_LIT,
 
     ESC_CHAR,
     IDENT,
-    UNKNOWN,
+    UNKNOWN
 };
 
 int yylex();
+int yylex_destroy();
 
 #endif
