@@ -1,7 +1,7 @@
 #ifndef DATA_STRUCTURE_H
 #define DATA_STRUCTURE_H
 
-#include "parser.h"
+#include <liboddl/liboddl.h>
 #include "tokens.h"
 
 int parse_data_structure(struct ODDLParser* parser,

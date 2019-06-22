@@ -2,8 +2,7 @@
 #define TEST_UTILS_H
 
 #include <stdint.h>
-
-#include "../src/parser.h"
+#include <liboddl/liboddl.h>
 
 void* print_bool(void* in) {
     char* val = in;

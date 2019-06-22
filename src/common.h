@@ -2,7 +2,7 @@
 #define PARSE_LIT_H
 
 #include "tokens.h"
-#include "parser.h"
+#include <liboddl/liboddl.h>
 
 struct ODDLStructure* new_structure();
 
