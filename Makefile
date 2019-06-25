@@ -1,6 +1,6 @@
 LIB := liboddl.a
 
-CFLAGS ?= -std=c89 -pedantic -march=native -Wall -g
+CFLAGS ?= -std=c89 -pedantic -march=native -Wall -O3 -fPIC
 CFLAGS += -I.
 LDFLAGS :=
 
@@ -19,4 +19,4 @@ tests/%: tests/%.o $(LIB)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm $(TESTS)
+	rm -f $(TESTS) $(LIB) $(LIB_OBJECTS)
