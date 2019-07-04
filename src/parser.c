@@ -8,23 +8,24 @@
 #include "string_utils.h"
 
 char* typeName[TYPE_TYPE+1] = {
-    "OFFSET_SHOULDNT_BE_USED",
-    "BOOL",
-    "INT8",
-    "INT16",
-    "INT32",
-    "INT64",
-    "UINT8",
-    "UINT16",
-    "UINT32",
-    "UINT64",
-    "FLOAT16",
-    "FLOAT32",
-    "FLOAT64",
-    "STRING",
-    "REF",
-    "TYPE"
+    "NONE",
+    "bool",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "unsigned_int8",
+    "unsigned_int16",
+    "unsigned_int32",
+    "unsigned_int64",
+    "half",
+    "float",
+    "double",
+    "string",
+    "ref",
+    "type"
 };
+
 
 static void free_property(struct ODDLProperty* prop) {
     free(prop->identifier);
@@ -61,7 +62,7 @@ static void free_structure(struct ODDLStructure* st) {
     free(st);
 }
 
-static int parse_property(struct ODDLParser* parser, struct ODDLStructure* ret) {
+static int parse_property(struct ODDLDoc* doc, struct ODDLStructure* ret) {
     enum ODDLTokens curToken;
     struct ODDLProperty newProp = {NULL, 0, 0, NULL, {NULL, NULL}, 0};
     struct ODDLProperty* tmp;
@@ -172,9 +173,9 @@ static int parse_property(struct ODDLParser* parser, struct ODDLStructure* ret) 
     return 1;
 }
 
-static int parse_structure(struct ODDLParser* parser, struct ODDLStructure* ret);
+static int parse_structure(struct ODDLDoc* doc, struct ODDLStructure* ret);
 
-static int parse_meta_structure(struct ODDLParser* parser,
+static int parse_meta_structure(struct ODDLDoc* doc,
                                 struct ODDLStructure* ret) {
     enum ODDLTokens curToken;
 
@@ -183,15 +184,15 @@ static int parse_meta_structure(struct ODDLParser* parser,
     ret->properties = NULL;
     curToken = yylex();
     if (curToken == PERCENT) {
-        parse_local_name(parser, ret);
+        parse_local_name(doc, ret);
         curToken = yylex();
     } else if (curToken == DOLLAR) {
-        parse_global_name(parser, ret);
+        parse_global_name(doc, ret);
         curToken = yylex();
     }
     if (curToken == OPAR) {
         while (1) {
-            if (!(parse_property(parser, ret))) {
+            if (!(parse_property(doc, ret))) {
                 fprintf(stderr, "Error parsing properties, aborting\n");
                 free_structure(ret);
                 return -1;
@@ -221,8 +222,8 @@ static int parse_meta_structure(struct ODDLParser* parser,
         struct ODDLStructure* tmp;
         int status;
 
-        tmp = new_structure();
-        status = parse_structure(parser, tmp);
+        tmp = oddl_new_structure();
+        status = parse_structure(doc, tmp);
         if (status == -2) {
             free_structure(tmp);
             break;
@@ -245,7 +246,7 @@ static int parse_meta_structure(struct ODDLParser* parser,
     return 1;
 }
 
-static int parse_structure(struct ODDLParser* parser, struct ODDLStructure* ret) {
+static int parse_structure(struct ODDLDoc* doc, struct ODDLStructure* ret) {
     enum ODDLTokens curToken;
 
     curToken = yylex();
@@ -253,7 +254,7 @@ static int parse_structure(struct ODDLParser* parser, struct ODDLStructure* ret)
         case END:
             return 0;
         case IDENT:
-            return parse_meta_structure(parser, ret);
+            return parse_meta_structure(doc, ret);
         case BOOL:
         case INT8:
         case INT16:
@@ -269,7 +270,7 @@ static int parse_structure(struct ODDLParser* parser, struct ODDLStructure* ret)
         case STRING:
         case REF:
         case TYPE:
-            return parse_data_structure(parser, ret, curToken);
+            return parse_data_structure(doc, ret, curToken);
         case CBRACE:
             return -2;
         default:
@@ -313,12 +314,12 @@ static struct ODDLStructure* find_child(struct ODDLStructure* st, char* name) {
     return NULL;
 }
 
-static struct ODDLStructure* resolve_ref(struct ODDLParser* parser,
+static struct ODDLStructure* resolve_ref(struct ODDLDoc* doc,
                                          struct ODDLStructure* st,
                                          struct ODDLRef* ref) {
     char* cursor = ref->refStr;
-    struct ODDLStructure* ret;
-    struct ODDLStructure* refRoot;
+    struct ODDLStructure* ret = NULL;
+    struct ODDLStructure* refRoot = NULL;
     unsigned nbIdents;
 
     nbIdents = split_sub_idents(cursor+1);
@@ -326,12 +327,12 @@ static struct ODDLStructure* resolve_ref(struct ODDLParser* parser,
     if (*cursor == '$') {
         int idx;
 
-        idx = find_global_name(parser, cursor+1);
+        idx = find_global_name(doc, cursor+1);
         if (idx < 0) {
             fprintf(stderr, "Undefined global name: $%s\n", cursor+1);
             return NULL;
         }
-        refRoot = parser->globalNames[idx].ref;
+        refRoot = doc->globalNames[idx].ref;
         cursor = next_sub_ident(cursor);
         nbIdents--;
     } else if (*cursor == '%') {
@@ -350,13 +351,13 @@ static struct ODDLStructure* resolve_ref(struct ODDLParser* parser,
     return ret;
 }
 
-static int resolve_all_refs(struct ODDLParser* parser, struct ODDLStructure* root) {
+static int resolve_all_refs(struct ODDLDoc* doc, struct ODDLStructure* root) {
     if (root->nbProperties > 0) {
         unsigned i;
 
         for (i = 0; i < root->nbProperties; i++) {
             if (root->properties[i].ref.refStr) {
-                root->properties[i].ref.ref = resolve_ref(parser, root, &root->properties[i].ref);
+                root->properties[i].ref.ref = resolve_ref(doc, root, &root->properties[i].ref);
             }
         }
     }
@@ -364,7 +365,7 @@ static int resolve_all_refs(struct ODDLParser* parser, struct ODDLStructure* roo
         unsigned i;
 
         for (i = 0; i < root->nbStructures; i++) {
-            if (!resolve_all_refs(parser, root->structures[i])) {
+            if (!resolve_all_refs(doc, root->structures[i])) {
                 return 0;
             }
         }
@@ -373,7 +374,7 @@ static int resolve_all_refs(struct ODDLParser* parser, struct ODDLStructure* roo
         unsigned i;
 
         for (i = 0; i < root->vecSize*root->nbVec; i++) {
-            if (!(refs[i].ref = resolve_ref(parser, root, refs+i))) {
+            if (!(refs[i].ref = resolve_ref(doc, root, refs+i))) {
                 fprintf(stderr, "Error: failed to resolve a ref: %s\n", refs[i].refStr);
                 return 0;
             }
@@ -382,21 +383,21 @@ static int resolve_all_refs(struct ODDLParser* parser, struct ODDLStructure* roo
     return 1;
 }
 
-void oddl_free(struct ODDLParser* parser) {
-    free_structure(parser->root);
-    free(parser->globalNames);
+void oddl_free(struct ODDLDoc* doc) {
+    free_structure(doc->root);
+    free(doc->globalNames);
 }
 
-int oddl_parse(struct ODDLParser* ret, FILE* file) {
+int oddl_parse(struct ODDLDoc* ret, FILE* file) {
     struct ODDLStructure* tmpStruct;
     int parseStatus = 0;
 
     yyin = file;
     ret->nbGlobalNames = 0;
     ret->globalNames = NULL;
-    ret->root = new_structure();
+    ret->root = oddl_new_structure();
 
-    while ((tmpStruct = new_structure()) && (parseStatus = parse_structure(ret, tmpStruct)) > 0) {
+    while ((tmpStruct = oddl_new_structure()) && (parseStatus = parse_structure(ret, tmpStruct)) > 0) {
         struct ODDLStructure** tmpPtr = NULL;
 
         if (!(tmpPtr = realloc(ret->root->structures,

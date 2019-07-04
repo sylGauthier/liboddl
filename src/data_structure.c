@@ -93,7 +93,7 @@ static void* parse_list(enum ODDLDataType type, unsigned int vecSize, void* list
     }
 }
 
-static int parse_data_list(struct ODDLParser* parser,
+static int parse_data_list(struct ODDLDoc* doc,
                            struct ODDLStructure* dataStruct) {
     enum ODDLTokens curToken;
 
@@ -146,7 +146,7 @@ static int parse_data_list(struct ODDLParser* parser,
     return 1;
 }
 
-int parse_data_structure(struct ODDLParser* parser,
+int parse_data_structure(struct ODDLDoc* doc,
                          struct ODDLStructure* st,
                          enum ODDLTokens typeToken) {
     enum ODDLTokens curToken;
@@ -164,17 +164,17 @@ int parse_data_structure(struct ODDLParser* parser,
         curToken = yylex();
     }
     if (curToken == PERCENT) {
-        parse_local_name(parser, st);
+        parse_local_name(doc, st);
         curToken = yylex();
     } else if (curToken == DOLLAR) {
-        parse_global_name(parser, st);
+        parse_global_name(doc, st);
         curToken = yylex();
     }
     if (curToken != OBRACE) {
         invalid_token(curToken);
         return -1;
     }
-    if (!parse_data_list(parser, st)) {
+    if (!parse_data_list(doc, st)) {
         return -1;
     }
     return 1;

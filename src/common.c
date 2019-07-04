@@ -4,7 +4,7 @@
 
 #include "common.h"
 
-struct ODDLStructure* new_structure() {
+struct ODDLStructure* oddl_new_structure() {
     struct ODDLStructure* st;
 
     if (!(st = malloc(sizeof(struct ODDLStructure)))) {
@@ -32,17 +32,17 @@ void invalid_token(enum ODDLTokens token) {
     fprintf(stderr, "Error: line %d: invalid token: %d\n", curLine, token);
 }
 
-int find_global_name(struct ODDLParser* parser, const char* name) {
+int find_global_name(struct ODDLDoc* doc, const char* name) {
     int i;
 
-    for (i = 0; i < parser->nbGlobalNames; i++) {
-        if (!strcmp(parser->globalNames[i].str, name))
+    for (i = 0; i < doc->nbGlobalNames; i++) {
+        if (!strcmp(doc->globalNames[i].str, name))
             return i;
     }
     return -1;
 }
 
-int parse_global_name(struct ODDLParser* parser, struct ODDLStructure* ref) {
+int parse_global_name(struct ODDLDoc* doc, struct ODDLStructure* ref) {
     struct ODDLGlobalName* tmp;
     char* name;
     enum ODDLTokens curToken;
@@ -53,23 +53,23 @@ int parse_global_name(struct ODDLParser* parser, struct ODDLStructure* ref) {
         return -1;
     }
     name = strVal;
-    if (find_global_name(parser, name) > 0) {
+    if (find_global_name(doc, name) > 0) {
         fprintf(stderr, "Error: redefinition of gobal name '%s'\n", name);
         return -1;
     }
-    if (!(tmp = realloc(parser->globalNames, (parser->nbGlobalNames+1)*sizeof(*parser->globalNames)))) {
+    if (!(tmp = realloc(doc->globalNames, (doc->nbGlobalNames+1)*sizeof(*doc->globalNames)))) {
         fprintf(stderr, "Error reallocating memory for global names\n");
         return -1;
     }
-    parser->globalNames = tmp;
-    parser->globalNames[parser->nbGlobalNames].str = name;
-    parser->globalNames[parser->nbGlobalNames].ref = ref;
+    doc->globalNames = tmp;
+    doc->globalNames[doc->nbGlobalNames].str = name;
+    doc->globalNames[doc->nbGlobalNames].ref = ref;
     ref->name.str = name;
-    ref->name.globalNameIdx = parser->nbGlobalNames;
-    return parser->nbGlobalNames++;
+    ref->name.globalNameIdx = doc->nbGlobalNames;
+    return doc->nbGlobalNames++;
 }
 
-int parse_local_name(struct ODDLParser* parser, struct ODDLStructure* ref) {
+int parse_local_name(struct ODDLDoc* doc, struct ODDLStructure* ref) {
     enum ODDLTokens curToken;
 
     curToken = yylex();
@@ -189,7 +189,7 @@ int parse_float(void* in, unsigned size) {
         case OCT_LIT:
         case BIN_LIT:
             bin = intVal;
-            *fl = sign * *((float*)&bin);
+            *fl = (float)(sign * *((float*)&bin));
             return 1;
         case FLOAT_LIT:
             *fl = sign * dblVal;

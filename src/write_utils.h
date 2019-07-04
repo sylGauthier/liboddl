@@ -73,7 +73,7 @@ void* print_string(void* in) {
 void* print_ref(void* in) {
     struct ODDLRef* ref = in;
 
-    printf("ref(%s)", ref->ref->name.str);
+    printf(ref->refStr);
     return ((char**)in)+1;
 }
 
