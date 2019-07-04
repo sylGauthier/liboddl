@@ -1,5 +1,5 @@
-#ifndef PARSER_H
-#define PARSER_H
+#ifndef LIBODDL_H
+#define LIBODDL_H
 
 #include <stdio.h>
 #include <stdint.h>
@@ -30,9 +30,6 @@ enum ODDLDataType {
 };
 
 extern char* typeName[TYPE_TYPE+1];
-
-struct ODDLStructure;
-struct ODDLRef;
 
 struct ODDLName {
     int globalNameIdx;
@@ -76,14 +73,18 @@ struct ODDLGlobalName {
     struct ODDLStructure* ref;
 };
 
-struct ODDLParser {
+struct ODDLDoc {
     struct ODDLStructure* root;
 
     unsigned int nbGlobalNames;
     struct ODDLGlobalName* globalNames;
 };
 
-int oddl_parse(struct ODDLParser* parser, FILE* file);
-void oddl_free(struct ODDLParser* parser);
+int oddl_parse(struct ODDLDoc* doc, FILE* file);
+int oddl_write(struct ODDLDoc* doc, FILE* file);
+void oddl_free(struct ODDLDoc* doc);
 
+struct ODDLProperty* oddl_get_property(struct ODDLStructure* st, char* propName);
+
+struct ODDLStructure* oddl_new_structure();
 #endif
