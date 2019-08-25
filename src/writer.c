@@ -43,7 +43,7 @@ static int write_data_structure(struct ODDLStructure* st, FILE* file, unsigned l
         case TYPE_TYPE:     print_clbk = print_type; break;
         default:            return 0;
     }
-    INDENT(file, level) fprintf(file, typeName[st->type]);
+    INDENT(file, level) fprintf(file, "%s", typeName[st->type]);
     if (st->vecSize >= 2) fprintf(file, "[%d] ", st->vecSize);
     else fprintf(file, " ");
     if (st->name.str) fprintf(file, "%c%s ", st->name.globalNameIdx >= 0 ? '$' : '%', st->name.str);
