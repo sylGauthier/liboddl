@@ -5,6 +5,190 @@
 #include "data_structure.h"
 #include "common.h"
 
+static int parse_int(void* in, unsigned size) {
+    enum ODDLTokens curToken;
+    int sign = 1;
+
+    curToken = yylex();
+    if (curToken == PLUS) {
+        sign = 1;
+        curToken = yylex();
+    } else if (curToken == MINUS) {
+        sign = -1;
+        curToken = yylex();
+    }
+    if (curToken == DEC_LIT
+            || curToken == HEX_LIT
+            || curToken == OCT_LIT
+            || curToken == BIN_LIT) {
+        switch (size) {
+            case 1:
+                *((int8_t*)in) = sign*intVal;
+                break;
+            case 2:
+                *((int16_t*)in) = sign*intVal;
+                break;
+            case 4:
+                *((int32_t*)in) = sign*intVal;
+                break;
+            case 8:
+                *((int64_t*)in) = sign*intVal;
+                break;
+            default:
+                fprintf(stderr, "Unhandled int size\n");
+                return 0;
+        }
+        return 1;
+    }
+    invalid_token(curToken);
+    return 0;
+}
+
+static int parse_uint(void* in, unsigned size) {
+    enum ODDLTokens curToken;
+
+    curToken = yylex();
+    if (curToken == PLUS) {
+        curToken = yylex();
+    }
+    if (curToken == DEC_LIT
+            || curToken == HEX_LIT
+            || curToken == OCT_LIT
+            || curToken == BIN_LIT) {
+        switch (size) {
+            case 1:
+                *((uint8_t*)in) = intVal;
+                break;
+            case 2:
+                *((uint16_t*)in) = intVal;
+                break;
+            case 4:
+                *((uint32_t*)in) = intVal;
+                break;
+            case 8:
+                *((uint64_t*)in) = intVal;
+                break;
+            default:
+                fprintf(stderr, "Error: line %d: Unhandled uint size(%d)\n", curLine, size);
+                return 0;
+        }
+        return 1;
+    }
+    invalid_token(curToken);
+    return 0;
+}
+
+static int parse_bool(void* in, unsigned size) {
+    enum ODDLTokens curToken;
+    char* boolean = in;
+
+    curToken = yylex();
+    switch (curToken) {
+        case BOOL_LIT:
+            *boolean = intVal;
+            return 1;
+        default:
+            invalid_token(curToken);
+            return 0;
+    }
+    return 0;
+}
+
+static int parse_float(void* in, unsigned size) {
+    enum ODDLTokens curToken;
+    float* fl = in;
+    float sign = 1.0;
+    uint32_t bin;
+
+    curToken = yylex();
+    if (curToken == MINUS) {
+        sign = -1.0;
+        curToken = yylex();
+    } else if (curToken == PLUS) {
+        curToken = yylex();
+    }
+    switch (curToken) {
+        case HEX_LIT:
+        case OCT_LIT:
+        case BIN_LIT:
+            bin = intVal;
+            memcpy(fl, &bin, sizeof(float));
+            *fl *= sign;
+            return 1;
+        case FLOAT_LIT:
+            *fl = sign * dblVal;
+            return 1;
+        case DEC_LIT:
+            *fl = sign * intVal;
+            return 1;
+        default:
+            invalid_token(curToken);
+            return 0;
+    }
+    return 1;
+}
+
+static int parse_string(void* in, unsigned size) {
+    enum ODDLTokens curToken;
+    char** str = in;
+
+    *str = NULL;
+    curToken = yylex();
+    if (curToken != STRING_LIT) {
+        invalid_token(STRING_LIT);
+        return 0;
+    }
+    *str = strVal;
+
+    return 1;
+}
+
+static int parse_ref(void* in, unsigned size) {
+    enum ODDLTokens curToken;
+    struct ODDLRef* ref = in;
+    char prefix = 0;
+
+    curToken = yylex();
+
+    switch (curToken) {
+        case NULL_LIT:
+            ref->ref = NULL;
+            ref->refStr = NULL;
+            return 1;
+        case DOLLAR:
+            prefix = '$';
+            break;
+        case PERCENT:
+            prefix = '%';
+            break;
+        case REF_LIT:
+            ref->refStr = strVal;
+            return 1;
+        default:
+            invalid_token(curToken);
+            return 0;
+    }
+
+    curToken = yylex();
+    if (curToken != IDENT) {
+        invalid_token(curToken);
+        return 0;
+    }
+    if (!(ref->refStr = malloc(strlen(strVal)+2))) {
+        return 0;
+    }
+    *(ref->refStr) = prefix;
+    strcpy(ref->refStr+1, strVal);
+    free(strVal);
+
+    return 1;
+}
+
+static int parse_type(void* in, unsigned size) {
+    fprintf(stderr, "Ref parsing not implemented\n");
+    return 1;
+}
+
 static void* parse_list(enum ODDLDataType type, unsigned int vecSize, void* list, unsigned int* nbVec) {
     void* ret = NULL;
     unsigned int i;
