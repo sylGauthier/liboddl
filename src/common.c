@@ -189,7 +189,8 @@ int parse_float(void* in, unsigned size) {
         case OCT_LIT:
         case BIN_LIT:
             bin = intVal;
-            *fl = (float)(sign * *((float*)&bin));
+            memcpy(fl, &bin, sizeof(float));
+            *fl *= sign;
             return 1;
         case FLOAT_LIT:
             *fl = sign * dblVal;

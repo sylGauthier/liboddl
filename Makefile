@@ -1,6 +1,6 @@
 LIB := liboddl
 
-CFLAGS ?= -std=c89 -pedantic -march=native -Wall -O3 -fPIC
+CFLAGS ?= -std=c89 -pedantic -march=native -Wall -O3 -fPIC -D_POSIX_C_SOURCE=200112L
 CFLAGS += -I.
 
 PREFIX ?= $(HOME)/.local
@@ -22,7 +22,7 @@ tests/%: tests/%.o $(LIB).a
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 liboddl.pc:
-	printf 'prefix=%s\nincludedir=%s\nlibdir=%s\n\nName: %s\nDescription: %s\nVersion: %s\nCflags: -I$${includedir}\nLibs: -L$${libdir} -l$(LIB)\n' \
+	printf 'prefix=%s\nincludedir=%s\nlibdir=%s\n\nName: %s\nDescription: %s\nVersion: %s\nCflags: -I$${includedir}\nLibs: -L$${libdir} -l$(patsubst lib%,%,$(LIB))\n' \
 		'$(PREFIX)' '$${prefix}/$(INCLUDEDIR)' '$${prefix}/$(LIBDIR)' '$(LIB)' 'Parser for the Open Data Description Language' '0' > $@
 
 clean:
