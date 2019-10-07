@@ -222,8 +222,12 @@ static int parse_meta_structure(struct ODDLDoc* doc,
         struct ODDLStructure* tmp;
         int status;
 
-        tmp = oddl_new_structure();
+        if (!(tmp = oddl_new_structure())) {
+            fprintf(stderr, "Error: could not allocate new ODDL structure\n");
+            return 0;
+        }
         status = parse_structure(doc, tmp);
+        tmp->parent = ret;
         if (status == -2) {
             free_structure(tmp);
             break;
@@ -306,8 +310,7 @@ static struct ODDLStructure* find_child(struct ODDLStructure* st, char* name) {
     unsigned i;
 
     for (i = 0; i < st->nbStructures; i++) {
-        if (!(strcmp(name, st->structures[i]->name.str))) {
-            printf("Found ref %s == %s\n", name, st->structures[i]->name.str);
+        if (st->structures[i]->name.str && !(strcmp(name, st->structures[i]->name.str))) {
             return st->structures[i];
         }
     }
@@ -336,9 +339,11 @@ static struct ODDLStructure* resolve_ref(struct ODDLDoc* doc,
         cursor = next_sub_ident(cursor);
         nbIdents--;
     } else if (*cursor == '%') {
-        if (!(refRoot = st->parent)) {
+        if (!(st->parent && (refRoot = st->parent->parent))) {
+            printf("Error: could not resolve ref, structure %s has no grand-parent\n", st->identifier);
             return NULL;
         }
+        cursor++;
     }
     ret = refRoot;
     for (; nbIdents > 0; nbIdents--) {
