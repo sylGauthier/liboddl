@@ -66,6 +66,7 @@ static int parse_property(struct ODDLDoc* doc, struct ODDLStructure* ret) {
     enum ODDLTokens curToken;
     struct ODDLProperty newProp = {NULL, 0, 0, NULL, {NULL, NULL}, 0};
     struct ODDLProperty* tmp;
+    int sign = 1, onceMore = 1;
 
     curToken = yylex();
     if (curToken != IDENT) {
@@ -79,88 +80,69 @@ static int parse_property(struct ODDLDoc* doc, struct ODDLStructure* ret) {
         return 0;
     }
     curToken = yylex();
-    switch (curToken) {
-        case BOOL_LIT :
-        case DEC_LIT :
-        case HEX_LIT :
-        case OCT_LIT :
-        case BIN_LIT :
-            newProp.llint = intVal;
-            newProp.dbl = intVal;
-            break;
-        case FLOAT_LIT :
-            newProp.dbl = dblVal;
-            break;
-        case STRING_LIT :
-            newProp.str = strVal;
-            break;
-        case REF_LIT :
-            newProp.ref.refStr = strVal;
-            break;
-        case DOLLAR :
-            if ((curToken = yylex()) != IDENT) {
-                invalid_token(curToken);
-                return 0;
-            }
-            newProp.ref.refStr = str_prefix('$', strVal);
-            free(strVal);
-            break;
-        case PERCENT :
-            if ((curToken = yylex()) != IDENT) {
-                invalid_token(curToken);
-                return 0;
-            }
-            newProp.ref.refStr = str_prefix('%', strVal);
-            free(strVal);
-            break;
-        case BOOL :
-            newProp.type = TYPE_BOOL;
-            break;
-        case INT8 :
-            newProp.type = TYPE_INT8;
-            break;
-        case INT16 :
-            newProp.type = TYPE_INT16;
-            break;
-        case INT32 :
-            newProp.type = TYPE_INT32;
-            break;
-        case INT64 :
-            newProp.type = TYPE_INT64;
-            break;
-        case UINT8 :
-            newProp.type = TYPE_UINT8;
-            break;
-        case UINT16 :
-            newProp.type = TYPE_UINT16;
-            break;
-        case UINT32 :
-            newProp.type = TYPE_UINT32;
-            break;
-        case UINT64 :
-            newProp.type = TYPE_UINT64;
-            break;
-        case FLOAT16 :
-            newProp.type = TYPE_FLOAT16;
-            break;
-        case FLOAT32 :
-            newProp.type = TYPE_FLOAT32;
-            break;
-        case FLOAT64 :
-            newProp.type = TYPE_FLOAT64;
-            break;
-        case STRING :
-            newProp.type = TYPE_STRING;
-            break;
-        case REF :
-            newProp.type = TYPE_REF;
-            break;
-        case TYPE :
-            newProp.type = TYPE_TYPE;
-            break;
-        default :
-            invalid_token(curToken);
-            return 0;
+    while (onceMore) {
+        onceMore = 0;
+        switch (curToken) {
+            case MINUS :
+                sign = -1;
+                onceMore = 1;
+                curToken = yylex();
+                break;
+            case PLUS :
+                sign = 1;
+                onceMore = 1;
+                curToken = yylex();
+                break;
+            case BOOL_LIT :
+            case DEC_LIT :
+            case HEX_LIT :
+            case OCT_LIT :
+            case BIN_LIT :
+                newProp.llint = sign * intVal;
+                newProp.dbl = sign * intVal;
+                break;
+            case FLOAT_LIT :
+                newProp.dbl = sign * dblVal;
+                break;
+            case STRING_LIT :
+                newProp.str = strVal;
+                break;
+            case REF_LIT :
+                newProp.ref.refStr = strVal;
+                break;
+            case DOLLAR :
+                if ((curToken = yylex()) != IDENT) {
+                    invalid_token(curToken);
+                    return 0;
+                }
+                newProp.ref.refStr = str_prefix('$', strVal);
+                free(strVal);
+                break;
+            case PERCENT :
+                if ((curToken = yylex()) != IDENT) {
+                    invalid_token(curToken);
+                    return 0;
+                }
+                newProp.ref.refStr = str_prefix('%', strVal);
+                free(strVal);
+                break;
+            case BOOL :     newProp.type = TYPE_BOOL; break;
+            case INT8 :     newProp.type = TYPE_INT8; break;
+            case INT16 :    newProp.type = TYPE_INT16; break;
+            case INT32 :    newProp.type = TYPE_INT32; break;
+            case INT64 :    newProp.type = TYPE_INT64; break;
+            case UINT8 :    newProp.type = TYPE_UINT8; break;
+            case UINT16 :   newProp.type = TYPE_UINT16; break;
+            case UINT32 :   newProp.type = TYPE_UINT32; break;
+            case UINT64 :   newProp.type = TYPE_UINT64; break;
+            case FLOAT16 :  newProp.type = TYPE_FLOAT16; break;
+            case FLOAT32 :  newProp.type = TYPE_FLOAT32; break;
+            case FLOAT64 :  newProp.type = TYPE_FLOAT64; break;
+            case STRING :   newProp.type = TYPE_STRING; break;
+            case REF :      newProp.type = TYPE_REF; break;
+            case TYPE :     newProp.type = TYPE_TYPE; break;
+            default :       invalid_token(curToken); return 0;
+        }
     }
     if (!(tmp = realloc(ret->properties, (ret->nbProperties+1)*sizeof(struct ODDLProperty)))) {
         free_property(&newProp);
