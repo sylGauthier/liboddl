@@ -28,6 +28,38 @@ struct ODDLStructure* oddl_new_structure() {
     return st;
 }
 
+struct ODDLStructure* oddl_new_data_structure(enum ODDLDataType type, unsigned int nbVec, unsigned int vecSize) {
+    struct ODDLStructure* st;
+    size_t size;
+
+    if (vecSize > ((size_t)-1) / (size = TYPE_SIZE(type))
+     || nbVec > ((size_t)-1) / (size *= vecSize)
+     || !(st = oddl_new_structure())) {
+        return NULL;
+    }
+    st->type = type;
+    st->nbVec = nbVec;
+    st->vecSize = vecSize;
+    if (!(st->dataList = malloc(size * nbVec))) {
+        free(st);
+        return NULL;
+    }
+    return st;
+}
+
+int oddl_structure_add_child(struct ODDLStructure* parent, struct ODDLStructure* child) {
+    struct ODDLStructure** tmp = NULL;
+
+    if (!(tmp = realloc(parent->structures, (parent->nbStructures + 1) * sizeof(struct ODDLStructure*)))) {
+        return 0;
+    }
+    parent->structures = tmp;
+    child->parent = parent;
+    parent->structures[parent->nbStructures] = child;
+    parent->nbStructures++;
+    return 1;
+}
+
 void invalid_token(enum ODDLTokens token) {
     fprintf(stderr, "Error: line %d: invalid token: %d\n", curLine, token);
 }
