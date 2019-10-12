@@ -101,6 +101,9 @@ struct ODDLDoc {
     struct ODDLGlobalName* globalNames; /* All the global names, freed in oddl_free() */
 };
 
+/* Initialize an empty ODDL document */
+int oddl_init(struct ODDLDoc* doc);
+
 /* Parses a file, build the tree, allocate and populate all the structures */
 int oddl_parse(struct ODDLDoc* doc, FILE* file);
 
@@ -115,4 +118,11 @@ struct ODDLProperty* oddl_get_property(struct ODDLStructure* st, char* propName)
 
 /* Allocates and zeroes a new ODDLStructure */
 struct ODDLStructure* oddl_new_structure();
+
+/* Allocates a new data ODDLStructure, with dataList allocated but uninitialized */
+struct ODDLStructure* oddl_new_data_structure(enum ODDLDataType type, unsigned int nbVec, unsigned int vecSize);
+
+/* Add a substructure to a structure */
+int oddl_structure_add_child(struct ODDLStructure* parent, struct ODDLStructure* child);
+
 #endif
