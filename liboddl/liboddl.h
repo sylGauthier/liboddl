@@ -125,4 +125,12 @@ struct ODDLStructure* oddl_new_data_structure(enum ODDLDataType type, unsigned i
 /* Add a substructure to a structure */
 int oddl_structure_add_child(struct ODDLStructure* parent, struct ODDLStructure* child);
 
+/* Add a property to a structure; the property is copied as is (steals string pointers) */
+int oddl_structure_add_property(struct ODDLStructure* structure, const struct ODDLProperty* property);
+
+/* Add a property to a structure; the strings are copied */
+int oddl_structure_add_string_property(struct ODDLStructure* structure, const char* identifier, const char* value);
+int oddl_structure_add_double_property(struct ODDLStructure* structure, const char* identifier, double value);
+int oddl_structure_add_uint_property(struct ODDLStructure* structure, const char* identifier, uint64_t value);
+
 #endif
