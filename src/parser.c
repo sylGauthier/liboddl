@@ -65,7 +65,6 @@ static void free_structure(struct ODDLStructure* st) {
 static int parse_property(struct ODDLDoc* doc, struct ODDLStructure* ret) {
     enum ODDLTokens curToken;
     struct ODDLProperty newProp = {NULL, 0, 0, NULL, {NULL, NULL}, 0};
-    struct ODDLProperty* tmp;
     int sign = 1, onceMore = 1;
 
     curToken = yylex();
@@ -144,14 +143,11 @@ static int parse_property(struct ODDLDoc* doc, struct ODDLStructure* ret) {
             default :       invalid_token(curToken); return 0;
         }
     }
-    if (!(tmp = realloc(ret->properties, (ret->nbProperties+1)*sizeof(struct ODDLProperty)))) {
+    if (!oddl_structure_add_property(ret, &newProp)) {
         free_property(&newProp);
         fprintf(stderr, "Error reallocating property array\n");
         return 0;
     }
-    ret->properties = tmp;
-    ret->properties[ret->nbProperties] = newProp;
-    ret->nbProperties++;
     return 1;
 }
 
