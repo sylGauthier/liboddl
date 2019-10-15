@@ -119,7 +119,7 @@ struct ODDLProperty* oddl_get_property(struct ODDLStructure* st, char* propName)
 /* Allocates and zeroes a new ODDLStructure */
 struct ODDLStructure* oddl_new_structure();
 
-/* Allocates a new data ODDLStructure, with dataList allocated but uninitialized */
+/* Allocates a new data ODDLStructure, with dataList allocated but uninitialized (except for strings/refs which are initialized to NULL so the structure can be freed) */
 struct ODDLStructure* oddl_new_data_structure(enum ODDLDataType type, unsigned int nbVec, unsigned int vecSize);
 
 /* Add a substructure to a structure */
