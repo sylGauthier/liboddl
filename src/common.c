@@ -31,6 +31,7 @@ struct ODDLStructure* oddl_new_structure() {
 struct ODDLStructure* oddl_new_data_structure(enum ODDLDataType type, unsigned int nbVec, unsigned int vecSize) {
     struct ODDLStructure* st;
     size_t size;
+    unsigned int i;
 
     if (vecSize > ((size_t)-1) / (size = TYPE_SIZE(type))
      || nbVec > ((size_t)-1) / (size *= vecSize)
@@ -43,6 +44,17 @@ struct ODDLStructure* oddl_new_data_structure(enum ODDLDataType type, unsigned i
     if (!(st->dataList = malloc(size * nbVec))) {
         free(st);
         return NULL;
+    }
+    if (st->type == TYPE_REF) {
+        struct ODDLRef* refs = st->dataList;
+        for (i = 0; i < st->nbVec*st->vecSize; i++) {
+            refs[i].refStr = NULL;
+        }
+    } else if (st->type == TYPE_STRING) {
+        char** strings = st->dataList;
+        for (i = 0; i < st->nbVec*st->vecSize; i++) {
+            strings[i] = NULL;
+        }
     }
     return st;
 }
