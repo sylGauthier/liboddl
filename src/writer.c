@@ -12,7 +12,7 @@ static void print_property(struct ODDLProperty* prop, FILE* file) {
     } else if (prop->str) {
         fprintf(file, "\"%s\"", prop->str);
     } else if (prop->ref.ref) {
-        print_ref(&prop->ref);
+        print_ref(file, &prop->ref);
     } else if (prop->type) {
         fprintf(file, "%s", typeName[prop->type]);
     } else {
@@ -21,7 +21,7 @@ static void print_property(struct ODDLProperty* prop, FILE* file) {
 }
 
 static int write_data_structure(struct ODDLStructure* st, FILE* file, unsigned level) {
-    void* (*print_clbk)(void* data);
+    void* (*print_clbk)(FILE* f, void* data);
     void* ptr;
     unsigned i, j;
 
@@ -53,12 +53,12 @@ static int write_data_structure(struct ODDLStructure* st, FILE* file, unsigned l
         if (st->vecSize >= 2) {
             fprintf(file, "{");
             for (j = 0; j < st->vecSize; j++) {
-                ptr = print_clbk(ptr);
+                ptr = print_clbk(file, ptr);
                 if (j < st->vecSize-1) fprintf(file, ", ");
             }
             fprintf(file, "}");
         } else {
-            ptr = print_clbk(ptr);
+            ptr = print_clbk(file, ptr);
         }
         if (i < st->nbVec-1) fprintf(file, ", ");
     }

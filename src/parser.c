@@ -65,7 +65,6 @@ static void free_structure(struct ODDLStructure* st) {
 static int parse_property(struct ODDLDoc* doc, struct ODDLStructure* ret) {
     enum ODDLTokens curToken;
     struct ODDLProperty newProp = {NULL, 0, 0, NULL, {NULL, NULL}, 0};
-    struct ODDLProperty* tmp;
     int sign = 1, onceMore = 1;
 
     curToken = yylex();
@@ -144,14 +143,11 @@ static int parse_property(struct ODDLDoc* doc, struct ODDLStructure* ret) {
             default :       invalid_token(curToken); return 0;
         }
     }
-    if (!(tmp = realloc(ret->properties, (ret->nbProperties+1)*sizeof(struct ODDLProperty)))) {
+    if (!oddl_structure_add_property(ret, &newProp)) {
         free_property(&newProp);
         fprintf(stderr, "Error reallocating property array\n");
         return 0;
     }
-    ret->properties = tmp;
-    ret->properties[ret->nbProperties] = newProp;
-    ret->nbProperties++;
     return 1;
 }
 
@@ -370,6 +366,13 @@ static int resolve_all_refs(struct ODDLDoc* doc, struct ODDLStructure* root) {
     return 1;
 }
 
+int oddl_init(struct ODDLDoc* doc) {
+    doc->nbGlobalNames = 0;
+    doc->globalNames = NULL;
+    doc->root = oddl_new_structure();
+    return doc->root != NULL;
+}
+
 void oddl_free(struct ODDLDoc* doc) {
     free_structure(doc->root);
     free(doc->globalNames);
@@ -380,23 +383,17 @@ int oddl_parse(struct ODDLDoc* ret, FILE* file) {
     int parseStatus = 0;
 
     yyin = file;
-    ret->nbGlobalNames = 0;
-    ret->globalNames = NULL;
-    ret->root = oddl_new_structure();
+    if (!oddl_init(ret)) {
+        fprintf(stderr, "Error: could not allocate new ODDL structure\n");
+        return 0;
+    }
 
     while ((tmpStruct = oddl_new_structure()) && (parseStatus = parse_structure(ret, tmpStruct)) > 0) {
-        struct ODDLStructure** tmpPtr = NULL;
-
-        if (!(tmpPtr = realloc(ret->root->structures,
-                              (ret->root->nbStructures+1)*sizeof(struct ODDLStructure*)))) {
+        if (!oddl_structure_add_child(ret->root, tmpStruct)) {
             fprintf(stderr, "Error reallocating memory for root list\n");
             oddl_free(ret);
             return 0;
         }
-        ret->root->structures = tmpPtr;
-        tmpStruct->parent = ret->root;
-        ret->root->structures[ret->root->nbStructures] = tmpStruct;
-        ret->root->nbStructures++;
     }
     if (parseStatus < 0) {
         fprintf(stderr, "Parse error, aborting\n");
