@@ -101,6 +101,9 @@ struct ODDLDoc {
     struct ODDLGlobalName* globalNames; /* All the global names, freed in oddl_free() */
 };
 
+/* Initialize an empty ODDL document */
+int oddl_init(struct ODDLDoc* doc);
+
 /* Parses a file, build the tree, allocate and populate all the structures */
 int oddl_parse(struct ODDLDoc* doc, FILE* file);
 
@@ -115,4 +118,19 @@ struct ODDLProperty* oddl_get_property(struct ODDLStructure* st, char* propName)
 
 /* Allocates and zeroes a new ODDLStructure */
 struct ODDLStructure* oddl_new_structure();
+
+/* Allocates a new data ODDLStructure, with dataList allocated but uninitialized (except for strings/refs which are initialized to NULL so the structure can be freed) */
+struct ODDLStructure* oddl_new_data_structure(enum ODDLDataType type, unsigned int nbVec, unsigned int vecSize);
+
+/* Add a substructure to a structure */
+int oddl_structure_add_child(struct ODDLStructure* parent, struct ODDLStructure* child);
+
+/* Add a property to a structure; the property is copied as is (steals string pointers) */
+int oddl_structure_add_property(struct ODDLStructure* structure, const struct ODDLProperty* property);
+
+/* Add a property to a structure; the strings are copied */
+int oddl_structure_add_string_property(struct ODDLStructure* structure, const char* identifier, const char* value);
+int oddl_structure_add_double_property(struct ODDLStructure* structure, const char* identifier, double value);
+int oddl_structure_add_uint_property(struct ODDLStructure* structure, const char* identifier, uint64_t value);
+
 #endif
