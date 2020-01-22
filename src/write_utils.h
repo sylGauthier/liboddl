@@ -74,7 +74,7 @@ void* print_ref(FILE* f, void* in) {
     struct ODDLRef* ref = in;
 
     fprintf(f, "%s", ref->refStr);
-    return ((char**)in)+1;
+    return ((struct ODDLRef*)in)+1;
 }
 
 void* print_type(FILE* f, void* in) {
