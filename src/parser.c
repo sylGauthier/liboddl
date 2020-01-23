@@ -36,30 +36,32 @@ static void free_property(struct ODDLProperty* prop) {
 static void free_structure(struct ODDLStructure* st) {
     int i;
 
-    for (i = 0; i < st->nbStructures; i++) {
-        free_structure(st->structures[i]);
-    }
-    free(st->structures);
+    if (st) {
+        for (i = 0; i < st->nbStructures; i++) {
+            free_structure(st->structures[i]);
+        }
+        free(st->structures);
 
-    for (i = 0; i < st->nbProperties; i++) {
-        free_property(st->properties + i);
-    }
-    if (st->type == TYPE_REF) {
-        struct ODDLRef* refs = st->dataList;
-        for (i = 0; i < st->nbVec*st->vecSize; i++) {
-            free(refs[i].refStr);
+        for (i = 0; i < st->nbProperties; i++) {
+            free_property(st->properties + i);
         }
-    } else if (st->type == TYPE_STRING) {
-        char** strings = st->dataList;
-        for (i = 0; i < st->nbVec*st->vecSize; i++) {
-            free(strings[i]);
+        if (st->type == TYPE_REF) {
+            struct ODDLRef* refs = st->dataList;
+            for (i = 0; i < st->nbVec*st->vecSize; i++) {
+                free(refs[i].refStr);
+            }
+        } else if (st->type == TYPE_STRING) {
+            char** strings = st->dataList;
+            for (i = 0; i < st->nbVec*st->vecSize; i++) {
+                free(strings[i]);
+            }
         }
+        free(st->properties);
+        free(st->dataList);
+        free(st->identifier);
+        free(st->name.str);
+        free(st);
     }
-    free(st->properties);
-    free(st->dataList);
-    free(st->identifier);
-    free(st->name.str);
-    free(st);
 }
 
 static int parse_property(struct ODDLDoc* doc, struct ODDLStructure* ret) {
