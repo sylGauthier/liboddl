@@ -99,7 +99,7 @@ int oddl_write(struct ODDLDoc* doc, FILE* file) {
     for (i = 0; i < doc->root->nbStructures; i++) {
         if (doc->root->structures[i]->dataList) {
             write_data_structure(doc->root->structures[i], file, 0);
-        } else if (doc->root->structures[i]->structures) {
+        } else {
             write_meta_structure(doc->root->structures[i], file, 0);
         }
         if (i < doc->root->nbStructures - 1)
