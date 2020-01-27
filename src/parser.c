@@ -103,6 +103,7 @@ static int parse_property(struct ODDLDoc* doc, struct ODDLStructure* ret) {
                 newProp.dbl = sign * intVal;
                 break;
             case FLOAT_LIT :
+                newProp.llint = sign * dblVal;
                 newProp.dbl = sign * dblVal;
                 break;
             case STRING_LIT :
