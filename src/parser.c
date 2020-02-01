@@ -306,6 +306,7 @@ static struct ODDLStructure* resolve_ref(struct ODDLDoc* doc,
     struct ODDLStructure* refRoot = NULL;
     unsigned nbIdents;
 
+    if (!cursor) return NULL;
     nbIdents = split_sub_idents(cursor+1);
 
     if (*cursor == '$') {
@@ -360,7 +361,7 @@ static int resolve_all_refs(struct ODDLDoc* doc, struct ODDLStructure* root) {
         unsigned i;
 
         for (i = 0; i < root->vecSize*root->nbVec; i++) {
-            if (!(refs[i].ref = resolve_ref(doc, root, refs+i))) {
+            if (refs[i].refStr && !(refs[i].ref = resolve_ref(doc, root, refs+i))) {
                 fprintf(stderr, "Error: failed to resolve a ref: %s\n", refs[i].refStr);
                 return 0;
             }
@@ -401,11 +402,14 @@ int oddl_parse(struct ODDLDoc* ret, FILE* file) {
     if (parseStatus < 0) {
         fprintf(stderr, "Parse error, aborting\n");
         oddl_free(ret);
+        free_structure(tmpStruct);
+        memset(ret, 0, sizeof(*ret));
         return 0;
     }
     if (!resolve_all_refs(ret, ret->root)) {
         fprintf(stderr, "Error resolving refs, aborting\n");
         oddl_free(ret);
+        return 0;
     }
     if (tmpStruct) {
         free_structure(tmpStruct);
