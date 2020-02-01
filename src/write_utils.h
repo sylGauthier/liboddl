@@ -73,7 +73,11 @@ void* print_string(FILE* f, void* in) {
 void* print_ref(FILE* f, void* in) {
     struct ODDLRef* ref = in;
 
-    fprintf(f, "%s", ref->refStr);
+    if (ref->refStr) {
+        fprintf(f, "%s", ref->refStr);
+    } else {
+        fprintf(f, "null");
+    }
     return ((struct ODDLRef*)in)+1;
 }
 
