@@ -114,10 +114,10 @@ int oddl_write(struct ODDLDoc* doc, FILE* file);
 void oddl_free(struct ODDLDoc* doc);
 
 /* Returns a pointer to the property bearing the name propName in the structure st, or NULL if no such property */
-struct ODDLProperty* oddl_get_property(struct ODDLStructure* st, char* propName);
+struct ODDLProperty* oddl_get_property(const struct ODDLStructure* st, const char* propName);
 
 /* Allocates and zeroes a new ODDLStructure */
-struct ODDLStructure* oddl_new_structure();
+struct ODDLStructure* oddl_new_structure(void);
 
 /* Allocates a new data ODDLStructure, with dataList allocated but uninitialized (except for strings/refs which are initialized to NULL so the structure can be freed) */
 struct ODDLStructure* oddl_new_data_structure(enum ODDLDataType type, unsigned int nbVec, unsigned int vecSize);
