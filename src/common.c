@@ -4,7 +4,7 @@
 
 #include "common.h"
 
-struct ODDLStructure* oddl_new_structure() {
+struct ODDLStructure* oddl_new_structure(void) {
     struct ODDLStructure* st;
 
     if (!(st = malloc(sizeof(struct ODDLStructure)))) {
