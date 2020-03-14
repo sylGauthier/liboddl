@@ -2,7 +2,7 @@
 
 #include <liboddl/liboddl.h>
 
-struct ODDLProperty* oddl_get_property(struct ODDLStructure* st, char* propName) {
+struct ODDLProperty* oddl_get_property(const struct ODDLStructure* st, const char* propName) {
     int i;
 
     if (!(st->properties)) {
